@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApprovIQ — Digital Leave Approval System</title>
+  <meta name="description" content="ApprovIQ - Streamlined digital leave management for educational institutions." />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/saas-theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" />
+</head>
+<body class="login-shell">
+<div class="gradient-bg"></div>
+<div class="login-page">
+  <div class="login-container">
+    <aside class="login-showcase">
+      <div class="login-showcase-badge">
+        <img src="/img/approveiq-logo.svg" alt="ApproveIQ Logo" class="login-showcase-logo" />
+        <span>ApproveIQ</span>
+      </div>
+      <h1 class="login-showcase-title">Institution-ready leave approvals, from request to final decision.</h1>
+      <p class="login-showcase-copy">Keep student applications, advisor review, HOD verification, and principal approval inside one clear digital workflow.</p>
+      <div class="login-showcase-list">
+        <div class="login-showcase-item">
+          <i class="ri-shield-check-line"></i>
+          <div>
+            <strong>Role-based access</strong>
+            <span>Each user lands in the right dashboard with the right controls.</span>
+          </div>
+        </div>
+        <div class="login-showcase-item">
+          <i class="ri-git-merge-line"></i>
+          <div>
+            <strong>Structured approvals</strong>
+            <span>Leave requests move through the exact institutional approval path.</span>
+          </div>
+        </div>
+        <div class="login-showcase-item">
+          <i class="ri-bar-chart-grouped-line"></i>
+          <div>
+            <strong>Live visibility</strong>
+            <span>Track pending, approved, and rejected requests in one place.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="login-form-panel">
+      <div class="login-head">
+        <img src="/img/approveiq-logo.svg" alt="ApproveIQ Logo" class="login-logo" />
+        <h1>ApproveIQ</h1>
+        <p class="login-subtitle">Sign in to continue to your workspace.</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input id="email" type="email" class="form-control" placeholder="your@approveiq.edu" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="password-field">
+            <input id="password" type="password" class="form-control password-input" placeholder="Enter your password" required autocomplete="current-password" />
+            <button type="button" id="togglePwd" class="password-toggle" tabindex="-1" aria-label="Toggle password visibility">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+        <div id="loginError" class="login-error"></div>
+        <button type="submit" class="btn btn-primary login-submit" id="loginBtn">
+          <i class="ri-login-circle-line"></i>
+          <span id="btnText">Sign In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  // If already logged in, redirect
+  if (API.getToken() && API.getUser()) {
+    const u = API.getUser();
+    window.location.href = `/${u.role}.html`;
+  }
+
+  document.getElementById('togglePwd').addEventListener('click', () => {
+    const inp = document.getElementById('password');
+    const icon = document.querySelector('#togglePwd i');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    icon.className = inp.type === 'password' ? 'ri-eye-line' : 'ri-eye-off-line';
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btnText.textContent = 'Signing in…';
+
+    try {
+      const data = await API.post('/auth/login', {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+      });
+      API.setSession(data.token, data.user);
+      window.location.href = data.redirect;
+    } catch (err) {
+      errEl.textContent = err.message || 'Login failed. Check your credentials.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btnText.textContent = 'Sign In';
+    }
+  });
+</script>
+</body>
+</html>

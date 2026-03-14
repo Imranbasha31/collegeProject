@@ -1,0 +1,9 @@
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M220 305L340 425L550 215" stroke="#22C55E" stroke-width="90" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="275" y="430" width="74" height="188" rx="16" fill="#0B3A57"/>
+
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M500 640C592.784 640 668 564.784 668 472C668 379.216 592.784 304 500 304C407.216 304 332 379.216 332 472C332 564.784 407.216 640 500 640ZM500 554C545.287 554 582 517.287 582 472C582 426.713 545.287 390 500 390C454.713 390 418 426.713 418 472C418 517.287 454.713 554 500 554Z" fill="#0B3A57"/>
+
+  <path d="M558 544L640 626" stroke="#0B3A57" stroke-width="38" stroke-linecap="round"/>
+</svg>

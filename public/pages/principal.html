@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApprovIQ — Principal Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/saas-theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" />
+</head>
+<body class="futuristic app-shell">
+<div class="gradient-bg"></div>
+
+<!-- Mobile header -->
+<header class="mobile-header">
+  <div class="mobile-header-brand">
+    <div class="brand-icon"><img src="/img/approveiq-logo.svg" alt="ApproveIQ" class="brand-logo-mark" /></div>
+    <span>ApprovIQ</span>
+  </div>
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu"><i class="ri-menu-3-line"></i></button>
+</header>
+<div class="mobile-drawer-overlay" id="drawerOverlay"></div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <div class="brand-icon"><img src="/img/approveiq-logo.svg" alt="ApproveIQ" class="brand-logo-mark" /></div>
+        <div><h1>ApprovIQ</h1><div class="brand-subtitle">Leave Management</div></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="avatarInitial">P</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">Principal</div>
+        <div class="user-role">Principal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Navigation</div>
+      <div class="nav-item active" id="nav-pending" onclick="showSection('pending')">
+        <i class="ri-shield-check-line"></i> Final Approvals
+        <span class="badge-count" id="pendingCount" style="display:none">0</span>
+      </div>
+      <div class="nav-item" id="nav-all" onclick="showSection('all')">
+        <i class="ri-building-2-line"></i> Institution Overview
+      </div>
+      <div class="nav-item" id="nav-notifications" onclick="showSection('notifications')">
+        <i class="ri-notification-3-line"></i> Notifications
+        <span class="badge-count" id="notifCount" style="display:none">0</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="API.logout()"><i class="ri-logout-box-r-line"></i> Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- Final Approvals -->
+    <section id="section-pending">
+      <div class="topbar">
+        <div class="topbar-title">
+          <h2>Final Approvals</h2>
+          <p>Leave requests requiring your final decision</p>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card purple"><div class="kpi-icon"><i class="ri-hourglass-line"></i></div><div><div class="kpi-label">Awaiting Decision</div><div class="kpi-value" id="kpi-pending">—</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon"><i class="ri-checkbox-circle-line"></i></div><div><div class="kpi-label">Approved</div><div class="kpi-value" id="kpi-approved">—</div></div></div>
+        <div class="kpi-card danger"><div class="kpi-icon"><i class="ri-close-circle-line"></i></div><div><div class="kpi-label">Rejected</div><div class="kpi-value" id="kpi-rejected">—</div></div></div>
+        <div class="kpi-card primary"><div class="kpi-icon"><i class="ri-file-list-3-line"></i></div><div><div class="kpi-label">Institution Total</div><div class="kpi-value" id="kpi-total">—</div></div></div>
+      </div>
+      <div class="card">
+        <div class="section-header">
+          <div><div class="section-title">Requests Pending Final Decision</div><div class="section-subtitle">These have been approved by both the Class Advisor and HOD</div></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Student</th><th>Department</th><th>Class</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Submitted</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="pendingBody"><tr><td colspan="9"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- All Institution -->
+    <section id="section-all" style="display:none">
+      <div class="topbar">
+        <div class="topbar-title"><h2>Institution Leave Overview</h2><p>All leave requests across all departments</p></div>
+      </div>
+      <div class="card">
+        <div class="filters">
+          <div class="search-box">
+            <i class="ri-search-line"></i>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search by student or department..." oninput="filterAll()"/>
+          </div>
+          <select class="form-control filter-select" id="filterStatus" onchange="filterAll()">
+            <option value="">All Status</option>
+            <option value="pending_advisor">Pending Advisor</option>
+            <option value="pending_hod">Pending HOD</option>
+            <option value="pending_principal">Pending Principal</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Student</th><th>Department</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="allBody"><tr><td colspan="8"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notifications -->
+    <section id="section-notifications" style="display:none">
+      <div class="topbar">
+        <div class="topbar-title"><h2>Notifications</h2></div>
+        <button class="btn btn-ghost btn-sm" onclick="markAllRead()"><i class="ri-check-double-line"></i> Mark All Read</button>
+      </div>
+      <div class="card"><div id="notifList"><div class="spinner"></div></div></div>
+    </section>
+  </main>
+
+  <aside class="right-panel">
+    <section class="panel-card">
+      <h3 class="panel-title">Pending Approvals</h3>
+      <div class="panel-list">
+        <div class="panel-item">
+          <div class="panel-item-user">
+            <div class="panel-avatar v4">NK</div>
+            <div>
+              <div class="panel-user-name">Nisha Kapoor</div>
+              <div class="panel-user-meta">Maternity Leave · 14 days</div>
+            </div>
+          </div>
+          <span class="panel-status wait">Pending</span>
+        </div>
+        <div class="panel-item">
+          <div class="panel-item-user">
+            <div class="panel-avatar v1">TR</div>
+            <div>
+              <div class="panel-user-name">Tarun Roy</div>
+              <div class="panel-user-meta">Annual Leave · 5 days</div>
+            </div>
+          </div>
+          <span class="panel-status ok">Approved</span>
+        </div>
+        <div class="panel-item">
+          <div class="panel-item-user">
+            <div class="panel-avatar v5">VI</div>
+            <div>
+              <div class="panel-user-name">Vikram Iyer</div>
+              <div class="panel-user-meta">Emergency Leave · 2 days</div>
+            </div>
+          </div>
+          <span class="panel-status no">Declined</span>
+        </div>
+      </div>
+      <button class="panel-link-btn" onclick="showSection('all')">All requests</button>
+    </section>
+
+    <section class="panel-card">
+      <h3 class="panel-title">Recent Comments</h3>
+      <div class="panel-list">
+        <div class="panel-note">
+          <div class="panel-note-head">HOD note on Nisha request</div>
+          <div class="panel-note-time">22m ago</div>
+          <div class="panel-note-text">Department staffing remains stable.</div>
+        </div>
+        <div class="panel-note">
+          <div class="panel-note-head">Advisor note on Tarun request</div>
+          <div class="panel-note-time">58m ago</div>
+          <div class="panel-note-text">Lab sessions rescheduled accordingly.</div>
+        </div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<!-- Action Modal -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Final Decision — Principal</div>
+      <button class="modal-close" onclick="closeModal('actionModal')">✕</button>
+    </div>
+    <div id="actionModalContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('actionModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitAction('rejected')"><i class="ri-close-line"></i> Reject</button>
+      <button class="btn btn-success" onclick="submitAction('approved')"><i class="ri-check-line"></i> Grant Final Approval</button>
+    </div>
+  </div>
+</div>
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">Leave Request — Full Audit Trail</div>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/principal.js"></script>
+<script>
+  (function(){
+    var btn=document.getElementById('mobileMenuBtn');
+    var overlay=document.getElementById('drawerOverlay');
+    var sidebar=document.querySelector('.sidebar');
+    if(!btn)return;
+    function openDrawer(){sidebar.classList.add('drawer-open');overlay.classList.add('open');document.body.style.overflow='hidden';}
+    function closeDrawer(){sidebar.classList.remove('drawer-open');overlay.classList.remove('open');document.body.style.overflow='';}
+    btn.addEventListener('click',openDrawer);
+    overlay.addEventListener('click',closeDrawer);
+    document.querySelectorAll('.nav-item').forEach(function(el){el.addEventListener('click',closeDrawer);});
+  })();
+</script>
+<script src="/js/animations.js"></script>
+</body>
+</html>
