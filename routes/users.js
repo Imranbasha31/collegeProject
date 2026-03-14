@@ -77,14 +77,45 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
   }
 });
 
-// DELETE /api/users/:id — admin soft-deletes user
+// DELETE /api/users/:id — admin removes user (hard delete)
 router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
   try {
+    const userId = Number(req.params.id);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: 'You cannot remove your own account' });
+    }
+
     const pool = await getPool();
+
+    const exists = await pool.request()
+      .input('id', sql.Int, userId)
+      .query('SELECT id FROM users WHERE id = @id');
+    if (!exists.recordset.length) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     await pool.request()
-      .input('id', sql.Int, req.params.id)
-      .query('UPDATE users SET is_active = 0 WHERE id = @id');
-    res.json({ message: 'User deactivated' });
+      .input('id', sql.Int, userId)
+      .query(`
+        BEGIN TRANSACTION;
+
+        -- Remove references to this user first to satisfy FK constraints.
+        UPDATE departments SET hod_id = NULL WHERE hod_id = @id;
+        UPDATE audit_logs SET actor_id = NULL WHERE actor_id = @id;
+
+        DELETE FROM notifications WHERE user_id = @id;
+        DELETE FROM approvals WHERE approver_id = @id;
+        DELETE FROM approvals WHERE leave_id IN (SELECT id FROM leave_requests WHERE student_id = @id);
+        DELETE FROM leave_requests WHERE student_id = @id;
+        DELETE FROM users WHERE id = @id;
+
+        COMMIT TRANSACTION;
+      `);
+
+    res.json({ message: 'User permanently removed' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

@@ -187,55 +187,17 @@
 
   <aside class="right-panel">
     <section class="panel-card">
-      <h3 class="panel-title">Pending Approvals</h3>
-      <div class="panel-list">
-        <div class="panel-item">
-          <div class="panel-item-user">
-            <div class="panel-avatar v1">AL</div>
-            <div>
-              <div class="panel-user-name">Alice Brown</div>
-              <div class="panel-user-meta">Annual Leave · 3 days</div>
-            </div>
-          </div>
-          <span class="panel-status ok">Approved</span>
-        </div>
-        <div class="panel-item">
-          <div class="panel-item-user">
-            <div class="panel-avatar v2">BO</div>
-            <div>
-              <div class="panel-user-name">Bob Carter</div>
-              <div class="panel-user-meta">Sick Leave · 1 day</div>
-            </div>
-          </div>
-          <span class="panel-status wait">Pending</span>
-        </div>
-        <div class="panel-item">
-          <div class="panel-item-user">
-            <div class="panel-avatar v5">CA</div>
-            <div>
-              <div class="panel-user-name">Carlos Ruiz</div>
-              <div class="panel-user-meta">Casual Leave · 2 days</div>
-            </div>
-          </div>
-          <span class="panel-status no">Declined</span>
-        </div>
+      <h3 class="panel-title">My Request Status</h3>
+      <div class="panel-list" id="myRequestStatusList">
+        <div class="panel-note">Loading...</div>
       </div>
       <button class="panel-link-btn" onclick="showSection('leaves')">All requests</button>
     </section>
 
     <section class="panel-card">
       <h3 class="panel-title">Recent Comments</h3>
-      <div class="panel-list">
-        <div class="panel-note">
-          <div class="panel-note-head">Alice on Annual Leave Request</div>
-          <div class="panel-note-time">12m ago</div>
-          <div class="panel-note-text">Please review before Friday.</div>
-        </div>
-        <div class="panel-note">
-          <div class="panel-note-head">Bob on Sick Leave Request</div>
-          <div class="panel-note-time">45m ago</div>
-          <div class="panel-note-text">Medical certificate uploaded.</div>
-        </div>
+      <div class="panel-list" id="recentCommentsList">
+        <div class="panel-note">Loading...</div>
       </div>
     </section>
   </aside>

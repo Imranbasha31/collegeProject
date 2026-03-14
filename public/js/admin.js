@@ -3,6 +3,7 @@ let user = null;
 let allUsers = [];
 let allLeaves = [];
 let editingUserId = null;
+let pendingRemoveUserId = null;
 let departments = [];
 let typeChartInst, trendChartInst, deptChartInst;
 let typeChart2Inst, trendChart2Inst, deptChart2Inst;
@@ -337,7 +338,7 @@ function renderUsers(users) {
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="openUserModal(${u.id})"><i class="ri-edit-line"></i></button>
-          <button class="btn btn-danger btn-sm" onclick="deactivateUser(${u.id},'${u.name}')"><i class="ri-user-forbid-line"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="openRemoveUserModal(${u.id})"><i class="ri-delete-bin-line"></i> Remove</button>
         </div>
       </td>
     </tr>`).join('');
@@ -418,13 +419,48 @@ async function saveUser() {
   } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
 }
 
-async function deactivateUser(id, name) {
-  if (!confirm(`Deactivate ${name}? They will no longer be able to log in.`)) return;
+function openRemoveUserModal(id) {
+  const selectedUser = allUsers.find((u) => u.id === id);
+  if (!selectedUser) {
+    API.showToast('User not found.', 'danger');
+    return;
+  }
+
+  pendingRemoveUserId = id;
+  const msg = document.getElementById('removeUserMessage');
+  msg.textContent = `Delete ${selectedUser.name}?`;
+
+  const btn = document.getElementById('confirmRemoveUserBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ri-delete-bin-line"></i> Delete Permanently';
+
+  openModal('removeUserModal');
+}
+
+function closeRemoveUserModal() {
+  pendingRemoveUserId = null;
+  closeModal('removeUserModal');
+}
+
+async function confirmRemoveUser() {
+  if (!pendingRemoveUserId) return;
+  const selectedUser = allUsers.find((u) => u.id === pendingRemoveUserId);
+  const selectedUserName = selectedUser?.name || 'User';
+
+  const btn = document.getElementById('confirmRemoveUserBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Deleting...';
+
   try {
-    await API.delete(`/users/${id}`);
-    API.showToast(`${name} deactivated.`, 'info');
+    await API.delete(`/users/${pendingRemoveUserId}`);
+    API.showToast(`${selectedUserName} permanently removed.`, 'info');
+    closeRemoveUserModal();
     await loadUsers();
-  } catch(e) { API.showToast('Error: ' + e.message, 'danger'); }
+  } catch(e) {
+    API.showToast('Error: ' + e.message, 'danger');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ri-delete-bin-line"></i> Delete Permanently';
+  }
 }
 
 // ── All Leaves ────────────────────────────────────────────────────────────────

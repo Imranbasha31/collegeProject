@@ -98,7 +98,7 @@
     <!-- User Management -->
     <section id="section-users" style="display:none">
       <div class="topbar">
-        <div class="topbar-title"><h2>User Management</h2><p>Add, edit, or deactivate system users</p></div>
+        <div class="topbar-title"><h2>User Management</h2><p>Add, edit, or remove system users</p></div>
         <button class="btn btn-primary" onclick="openUserModal()">
           <i class="ri-user-add-line"></i> Add User
         </button>
@@ -300,6 +300,26 @@
       <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
     </div>
     <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- Remove User Confirm Modal -->
+<div class="modal-overlay" id="removeUserModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--danger)">Remove User Permanently</div>
+      <button class="modal-close" onclick="closeRemoveUserModal()">✕</button>
+    </div>
+    <div style="font-size:0.9rem;color:var(--text-secondary);line-height:1.55">
+      <p id="removeUserMessage" style="margin:0 0 10px 0"></p>
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:12px;color:#b91c1c">
+        This action cannot be undone. Related leave records, approvals, and notifications will also be deleted.
+      </div>
+    </div>
+    <div class="modal-footer" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeRemoveUserModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmRemoveUserBtn" onclick="confirmRemoveUser()"><i class="ri-delete-bin-line"></i> Delete Permanently</button>
+    </div>
   </div>
 </div>
 

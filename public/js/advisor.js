@@ -3,6 +3,7 @@ let user = null;
 let allLeaves = [];
 let allNotifs = [];
 let currentLeaveId = null;
+let isSubmittingAction = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   user = API.requireAuth(['advisor']);
@@ -91,6 +92,7 @@ function filterAll() {
 
 async function openAction(leaveId) {
   currentLeaveId = leaveId;
+  isSubmittingAction = false;
   try {
     const { leave, approvals } = await API.get(`/leaves/${leaveId}`);
     document.getElementById('actionModalContent').innerHTML = `
@@ -109,18 +111,33 @@ async function openAction(leaveId) {
         <textarea class="form-control" id="actionComment" rows="3" placeholder="Add a reason or note for your decision..."></textarea>
       </div>`;
     openModal('actionModal');
+    setActionButtonsDisabled(false);
+    resetActionButtonLabels();
   } catch(e) { API.showToast('Error: ' + e.message, 'danger'); }
 }
 
 async function submitAction(action) {
+  if (isSubmittingAction) return;
   const comment = document.getElementById('actionComment')?.value || '';
+  isSubmittingAction = true;
+  setActionButtonsDisabled(true);
+  setActionButtonLoading(action, true);
   try {
     const endpoint = action === 'approved' ? `/leaves/${currentLeaveId}/approve` : `/leaves/${currentLeaveId}/reject`;
     await API.patch(endpoint, { comment });
     closeModal('actionModal');
     API.showToast(action === 'approved' ? 'Leave approved and forwarded to HOD!' : 'Leave rejected.', action === 'approved' ? 'success' : 'danger');
     await loadLeaves();
-  } catch(e) { API.showToast('Error: ' + e.message, 'danger'); }
+  } catch(e) {
+    API.showToast('Error: ' + e.message, 'danger');
+  } finally {
+    isSubmittingAction = false;
+    const modal = document.getElementById('actionModal');
+    if (modal?.classList.contains('open')) {
+      setActionButtonsDisabled(false);
+      setActionButtonLoading(action, false);
+    }
+  }
 }
 
 async function viewDetail(id) {
@@ -200,4 +217,40 @@ function showSection(name) {
   if (name === 'notifications') loadNotifications();
 }
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'actionModal') {
+    isSubmittingAction = false;
+    setActionButtonsDisabled(false);
+    resetActionButtonLabels();
+  }
+}
+
+function setActionButtonsDisabled(disabled) {
+  document.querySelectorAll('#actionModal button[onclick*="submitAction"]').forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+function setActionButtonLoading(action, loading) {
+  const selector = action === 'approved'
+    ? "#actionModal button[onclick*=\"submitAction('approved')\"]"
+    : "#actionModal button[onclick*=\"submitAction('rejected')\"]";
+  const button = document.querySelector(selector);
+  if (!button) return;
+
+  if (!button.dataset.defaultHtml) {
+    button.dataset.defaultHtml = button.innerHTML;
+  }
+
+  if (loading) {
+    button.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+  } else if (button.dataset.defaultHtml) {
+    button.innerHTML = button.dataset.defaultHtml;
+  }
+}
+
+function resetActionButtonLabels() {
+  setActionButtonLoading('approved', false);
+  setActionButtonLoading('rejected', false);
+}

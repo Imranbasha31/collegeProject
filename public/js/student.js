@@ -1,6 +1,7 @@
 // ── Student Dashboard JS ──────────────────────────────────────────────────────
 let user = null;
 let allLeaves = [];
+let isSubmittingLeave = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   user = API.requireAuth(['student']);
@@ -27,6 +28,7 @@ async function loadLeaves() {
     allLeaves = await API.get('/leaves');
     renderLeaves(allLeaves);
     updateKPIs(allLeaves);
+    renderMyRequestStatus(allLeaves);
   } catch (e) {
     document.getElementById('leavesBody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger)">Failed to load leaves: ${e.message}</td></tr>`;
   }
@@ -120,7 +122,22 @@ async function viewDetail(id) {
 // ── Apply Leave ───────────────────────────────────────────────────────────────
 document.getElementById('leaveForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (isSubmittingLeave) return;
+
   const errEl = document.getElementById('applyError');
+  const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+  const defaultSubmitHtml = submitBtn?.dataset.defaultHtml || submitBtn?.innerHTML || 'Submit Request';
+
+  if (submitBtn && !submitBtn.dataset.defaultHtml) {
+    submitBtn.dataset.defaultHtml = defaultSubmitHtml;
+  }
+
+  isSubmittingLeave = true;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Submitting...';
+  }
+
   errEl.style.display = 'none';
   try {
     const data = await API.post('/leaves', {
@@ -145,6 +162,12 @@ document.getElementById('leaveForm').addEventListener('submit', async (e) => {
   } catch(err) {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
+  } finally {
+    isSubmittingLeave = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtn.dataset.defaultHtml || 'Submit Request';
+    }
   }
 });
 
@@ -157,6 +180,7 @@ async function loadNotifications() {
     const countEl = document.getElementById('notifCount');
     if (unread > 0) { countEl.textContent = unread; countEl.style.display = ''; }
     renderNotifs();
+    renderRecentComments(allNotifs);
   } catch(e) {}
 }
 
@@ -185,6 +209,63 @@ async function markRead(id) {
 async function markAllRead() {
   await API.patch('/notifications/read-all');
   await loadNotifications();
+}
+
+function renderMyRequestStatus(leaves) {
+  const list = document.getElementById('myRequestStatusList');
+  if (!list) return;
+
+  const recent = [...leaves]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 3);
+
+  if (!recent.length) {
+    list.innerHTML = '<div class="panel-note"><div class="panel-note-text">No leave requests yet.</div></div>';
+    return;
+  }
+
+  list.innerHTML = recent.map((leave, index) => {
+    const initials = (user?.name || 'S').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+    const statusClass = leave.status === 'approved'
+      ? 'ok'
+      : leave.status === 'rejected'
+        ? 'no'
+        : 'wait';
+    const statusText = leave.status.replace('pending_', 'Pending ').replace(/^./, (c) => c.toUpperCase());
+
+    return `
+      <div class="panel-item">
+        <div class="panel-item-user">
+          <div class="panel-avatar v${(index % 5) + 1}">${initials}</div>
+          <div>
+            <div class="panel-user-name">${API.leaveTypeLabel(leave.leave_type)} Leave</div>
+            <div class="panel-user-meta">${leave.total_days} day${leave.total_days > 1 ? 's' : ''} · ${API.formatDate(leave.from_date)}</div>
+          </div>
+        </div>
+        <span class="panel-status ${statusClass}">${statusText}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderRecentComments(notifications) {
+  const list = document.getElementById('recentCommentsList');
+  if (!list) return;
+
+  const commentLike = notifications
+    .filter((n) => /reason|comment|approved|rejected|forwarded/i.test(n.message || ''))
+    .slice(0, 4);
+
+  if (!commentLike.length) {
+    list.innerHTML = '<div class="panel-note"><div class="panel-note-text">No recent comments on your requests.</div></div>';
+    return;
+  }
+
+  list.innerHTML = commentLike.map((n) => `
+    <div class="panel-note">
+      <div class="panel-note-head">Update on your leave request</div>
+      <div class="panel-note-time">${API.formatDate(n.created_at)}</div>
+      <div class="panel-note-text">${n.message}</div>
+    </div>`).join('');
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
